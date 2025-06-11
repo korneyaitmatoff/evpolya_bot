@@ -67,7 +67,7 @@ async def callback_1m(callback: CallbackQuery, state: FSMContext):
             prices=[
                 LabeledPrice(
                     label=f"Подписка на {month_count} месяц(а)",
-                    amount=100 * (int(month_count) * 100)
+                    amount=1999 * 100 if month_count == "1" else 3555 * 100,
                 )
             ],
             provider_token=PROVIDER_TOKEN,
