@@ -45,12 +45,16 @@ async def command_start_handler(message: Message):
 
 
 @dp.callback_query(lambda c: c.data.startswith("subcription_"))
-async def callback_1m(callback: CallbackQuery):
+async def callback_1m(callback: CallbackQuery, state: FSMContext):
     month_count = callback.data.replace('subcription_', '')
 
     await callback.message.answer(text=f"Вы выбрали {month_count} месяц(а)")
 
     try:
+        current_state = await state.get_state()
+        if current_state is not None:
+            await state.clear()
+
         await bot.send_invoice(
             chat_id=callback.from_user.id,
             title=f"Подписка на {month_count} месяц(а)",
