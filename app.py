@@ -15,7 +15,10 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.methods.create_invoice_link import LabeledPrice
 
-from config import TOKEN
+from config import (
+    TOKEN,
+    PROVIDER_TOKEN,
+)
 
 dp = Dispatcher()
 bot = Bot(token=TOKEN)
@@ -67,7 +70,7 @@ async def callback_1m(callback: CallbackQuery, state: FSMContext):
                     amount=100 * (int(month_count) * 100)
                 )
             ],
-            provider_token="381764678:TEST:127140",
+            provider_token=PROVIDER_TOKEN,
         )
     except Exception as e:
         logging.error(f"Ошибка при SendInvoice: {e}")
