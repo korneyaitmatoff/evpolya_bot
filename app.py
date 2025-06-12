@@ -3,7 +3,12 @@ import logging
 import asyncio
 
 from aiogram import Bot, Dispatcher, F
-from aiogram.filters import CommandStart
+from aiogram.filters import (
+    CommandStart,
+    ChatMemberUpdatedFilter,
+    IS_NOT_MEMBER,
+    IS_MEMBER,
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     Message,
@@ -11,6 +16,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     CallbackQuery,
     PreCheckoutQuery,
+    ChatMemberUpdated
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.methods.create_invoice_link import LabeledPrice
@@ -28,7 +34,7 @@ bot = Bot(token=TOKEN)
 async def command_start_handler(message: Message):
     await message.answer(text=f"Привет, {message.from_user.full_name}!")
 
-    # check subscription
+    # TODO: check subscription
     await message.answer(text="Проверяем подписку...")
 
     builder = InlineKeyboardBuilder()
@@ -100,6 +106,20 @@ async def process_unsuccessful_payment(message: Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is not None:
         await state.clear()
+
+
+# member add handler
+@dp.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+async def handle_message(event: ChatMemberUpdated):
+    print(event.new_chat_member.user.id)
+    await event.answer(text="hi, " + event.new_chat_member.user.full_name)
+
+
+# member remove handler
+@dp.chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
+async def handle_message(event: ChatMemberUpdated):
+    print(event.new_chat_member.user.id)
+    await event.answer(text="bye, " + event.new_chat_member.user.full_name)
 
 
 async def main():
