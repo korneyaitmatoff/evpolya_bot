@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import (
     create_engine,
-    MetaData,
     Column,
     Integer,
     String,
@@ -14,7 +13,6 @@ from sqlalchemy import (
 
 from sqlalchemy.orm import (
     declarative_base,
-    sessionmaker,
     Session
 )
 
@@ -37,7 +35,7 @@ class Customers(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     telegram_id = Column(BigInteger)
-    is_kicked = Column(Boolean, default=False)
+    chat_id = Column(BigInteger, default=0)
     expired_at = Column(TIMESTAMP)
     created_at = Column(TIMESTAMP, default=datetime.now())
 
@@ -86,6 +84,7 @@ def get_deal_by_customer_telegram_id(customer_telegram_id: int):
 
     return data
 
+
 def get_active_user(customer_telegram_id: int):
     session = Session(bind=engine)
 
@@ -97,3 +96,11 @@ def get_active_user(customer_telegram_id: int):
     session.close()
 
     return data
+
+
+def set_chat_id(customer_telegram_id: int, chat_id: int):
+    session = Session(bind=engine)
+    session.query(Customers).filter(
+        Customers.telegram_id == customer_telegram_id,
+    ).update(values={"chat_id": chat_id})
+    session.commit()

@@ -28,7 +28,12 @@ from config import (
 from src.database import (
     add_row,
     Customers,
-    Deals, set_success_deals, set_expired_date, get_deal_by_customer_telegram_id, get_active_user
+    Deals,
+    set_success_deals,
+    set_expired_date,
+    get_deal_by_customer_telegram_id,
+    get_active_user,
+    set_chat_id
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -153,19 +158,24 @@ async def handle_add_member(event: ChatMemberUpdated):
             f" не имеет активной подписки"
         )
 
-        await bot.ban_chat_member(
-            chat_id=event.chat.id,
-            user_id=event.new_chat_member.user.id
-        )
-
-        logging.info(
-            f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
-            f" заблокирован в чате {event.chat.id}"
-        )
+        # await bot.ban_chat_member(
+        #     chat_id=event.chat.id,
+        #     user_id=event.new_chat_member.user.id
+        # )
+        #
+        # logging.info(
+        #     f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
+        #     f" заблокирован в чате {event.chat.id}"
+        # )
     else:
         logging.info(
             f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
             f" имеет активную подписку"
+        )
+
+        set_chat_id(
+            customer_telegram_id=event.new_chat_member.user.id,
+            chat_id=event.chat.id
         )
 
 
