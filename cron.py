@@ -8,7 +8,7 @@ from src.database import (
     Customers
 )
 
-from app import dp, bot
+from app import bot
 
 
 async def main():
