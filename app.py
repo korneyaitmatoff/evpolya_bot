@@ -25,6 +25,13 @@ from config import (
     TOKEN,
     PROVIDER_TOKEN,
 )
+from src.database import (
+    add_row,
+    Customers,
+    Deals, set_success_deals, set_expired_date, get_deal_by_customer_telegram_id, get_active_user
+)
+
+logging.basicConfig(level=logging.INFO)
 
 dp = Dispatcher()
 bot = Bot(token=TOKEN)
@@ -78,6 +85,12 @@ async def callback_1m(callback: CallbackQuery, state: FSMContext):
             ],
             provider_token=PROVIDER_TOKEN,
         )
+
+        add_row(
+            table=Deals,
+            customer_telegram_id=callback.from_user.id,
+            service_months=month_count
+        )
     except Exception as e:
         logging.error(f"Ошибка при SendInvoice: {e}")
 
@@ -92,12 +105,28 @@ async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
 
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: Message, state: FSMContext):
-    await message.reply(f"Платеж на сумму {message.successful_payment.total_amount // 100} "
-                        f"{message.successful_payment.currency} прошел успешно!")
+    await message.reply(
+        f"Платеж на сумму {message.successful_payment.total_amount // 100} "
+        f"{message.successful_payment.currency} прошел успешно!"
+    )
     logging.info(f"Получен платеж от {message.from_user.id}")
     current_state = await state.get_state()
+
     if current_state is not None:
         await state.clear()
+
+    add_row(
+        table=Customers,
+        name=message.from_user.full_name,
+        telegram_id=message.from_user.id
+    )
+    set_success_deals(
+        customer_id=message.from_user.id
+    )
+    set_expired_date(
+        customer_telegram_id=message.from_user.id,
+        months=get_deal_by_customer_telegram_id(customer_telegram_id=message.from_user.id).service_months
+    )
 
 
 @dp.message(F.unsuccessful_payment)
@@ -110,16 +139,43 @@ async def process_unsuccessful_payment(message: Message, state: FSMContext):
 
 # member add handler
 @dp.chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
-async def handle_message(event: ChatMemberUpdated):
-    print(event.new_chat_member.user.id)
-    await event.answer(text="hi, " + event.new_chat_member.user.full_name)
+async def handle_add_member(event: ChatMemberUpdated):
+    logging.info(
+        f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
+        f" добавлен в чат {event.chat.id}"
+    )
+
+    if get_active_user(
+            customer_telegram_id=event.new_chat_member.user.id
+    ) is None:
+        logging.info(
+            f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
+            f" не имеет активной подписки"
+        )
+
+        await bot.ban_chat_member(
+            chat_id=event.chat.id,
+            user_id=event.new_chat_member.user.id
+        )
+
+        logging.info(
+            f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
+            f" заблокирован в чате {event.chat.id}"
+        )
+    else:
+        logging.info(
+            f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
+            f" имеет активную подписку"
+        )
 
 
 # member remove handler
 @dp.chat_member(ChatMemberUpdatedFilter(IS_MEMBER >> IS_NOT_MEMBER))
-async def handle_message(event: ChatMemberUpdated):
-    print(event.new_chat_member.user.id)
-    await event.answer(text="bye, " + event.new_chat_member.user.full_name)
+async def handler_remove_member(event: ChatMemberUpdated):
+    logging.info(
+        f"Пользователь {event.new_chat_member.user.full_name}, {event.new_chat_member.user.id}"
+        f" покинул чат {event.chat.id}"
+    )
 
 
 async def main():
