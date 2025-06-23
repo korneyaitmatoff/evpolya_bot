@@ -59,10 +59,17 @@ async def command_start_handler(message: Message):
         ]
     )))
 
-    await message.answer(
-        text="У вас нет активной подписки. Для приобритения подписки выберите нужную подписку",
-        reply_markup=builder.as_markup()
-    )
+    if get_active_user(
+            customer_telegram_id=message.from_user.id
+    ) is None:
+        await message.answer(
+            text="У вас нет активной подписки. Для приобритения подписки выберите нужную подписку",
+            reply_markup=builder.as_markup()
+        )
+    else:
+        await message.answer(
+            text="У вас уже есть активная подписка"
+        )
 
 
 @dp.callback_query(lambda c: c.data.startswith("subcription_"))
