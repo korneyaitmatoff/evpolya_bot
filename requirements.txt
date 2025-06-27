@@ -3,3 +3,5 @@ dotenv==0.9.9
 psycopg2-binary==2.9.10
 sqlalchemy==2.0.41
 python-dateutil==2.9.0.post0
+Telethon==1.40.0
+

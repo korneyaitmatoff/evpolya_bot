@@ -1,7 +1,6 @@
 import logging
 
 import asyncio
-
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import (
     CommandStart,
@@ -20,10 +19,17 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.methods.create_invoice_link import LabeledPrice
+import telethon
+from telethon.sync import TelegramClient
+from telethon.tl.functions.channels import InviteToChannelRequest
 
 from config import (
     TOKEN,
     PROVIDER_TOKEN,
+    API_ID,
+    API_HASH,
+    PHONE,
+    GROUP_ID
 )
 from src.database import (
     add_row,
@@ -40,6 +46,7 @@ logging.basicConfig(level=logging.INFO)
 
 dp = Dispatcher()
 bot = Bot(token=TOKEN)
+client = TelegramClient(PHONE, API_ID, API_HASH)
 
 
 @dp.message(CommandStart())
@@ -140,6 +147,14 @@ async def process_successful_payment(message: Message, state: FSMContext):
         months=get_deal_by_customer_telegram_id(customer_telegram_id=message.from_user.id).service_months
     )
 
+    user = await client.get_input_entity(message.from_user.username)
+    group = await client.get_input_entity(-1002879039601)
+
+    await client(InviteToChannelRequest(
+        channel=group,
+        users=[user]
+    ))
+
 
 @dp.message(F.unsuccessful_payment)
 async def process_unsuccessful_payment(message: Message, state: FSMContext):
@@ -200,4 +215,19 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    client.connect()
+
+    if not client.is_user_authorized():
+        try:
+            client.send_code_request(phone=PHONE, force_sms=False)
+            client.sign_in(
+                phone=PHONE,
+                code=input("Введите код: ")
+            )
+        except telethon.errors.rpcerrorlist.SessionPasswordNeededError:
+            client.sign_in(
+                password=input("Введите пароль: "),
+            )
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
