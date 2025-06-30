@@ -137,7 +137,8 @@ async def process_successful_payment(message: Message, state: FSMContext):
     add_row(
         table=Customers,
         name=message.from_user.full_name,
-        telegram_id=message.from_user.id
+        telegram_id=message.from_user.id,
+        chat_id=GROUP_ID
     )
     set_success_deals(
         customer_id=message.from_user.id
