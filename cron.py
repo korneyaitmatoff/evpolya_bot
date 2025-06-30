@@ -18,7 +18,7 @@ async def main():
         ).all()
 
         for customer in data:
-            await bot.unban_chat_member(
+            await bot.ban_chat_member(
                 chat_id=customer.chat_id,
                 user_id=customer.telegram_id
             )
