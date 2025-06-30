@@ -148,7 +148,7 @@ async def process_successful_payment(message: Message, state: FSMContext):
     )
 
     user = await client.get_input_entity(message.from_user.username)
-    group = await client.get_input_entity(-1002879039601)
+    group = await client.get_input_entity(GROUP_ID)
 
     await client(InviteToChannelRequest(
         channel=group,

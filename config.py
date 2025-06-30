@@ -13,4 +13,4 @@ API_ID = get_key('.env', 'API_ID')
 API_HASH = get_key('.env', 'API_HASH')
 PHONE = get_key('.env', 'PHONE')
 
-GROUP_ID = get_key('.env', 'GROUP_ID')
+GROUP_ID = -1002879039601
