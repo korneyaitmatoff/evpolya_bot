@@ -197,7 +197,7 @@ async def handle_add_member(event: ChatMemberUpdated):
 
         set_chat_id(
             customer_telegram_id=event.new_chat_member.user.id,
-            chat_id=event.chat.id
+            chat_id=GROUP_ID
         )
 
 
