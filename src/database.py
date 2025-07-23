@@ -20,6 +20,8 @@ engine = create_engine(
 )
 
 
+# TODO: change database handler's realization
+
 def add_row(table: Base, **kwargs):
     session = Session(bind=engine)
     session.add(table(**kwargs))
