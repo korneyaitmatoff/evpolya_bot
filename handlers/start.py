@@ -39,4 +39,7 @@ async def start_message(message: Message):
             text="У вас уже есть активная подписка"
         )
 
-        # TODO: suggest to renew subscription
+        await message.answer(
+            text="Однако вы можете ее продлить! Для этого выберите нужную подписку",
+            reply_markup=builder.as_markup()
+        )

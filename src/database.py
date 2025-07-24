@@ -36,13 +36,16 @@ def set_success_deals(customer_id: int):
     session.commit()
 
 
-def set_expired_date(months: int, customer_telegram_id: int):
-    dt = datetime.now() + relativedelta(months=months)
+def set_expired_date(months: int = 0, customer_telegram_id: int = 0, expired_date: datetime = None):
+    dt = (datetime.now() + relativedelta(months=months)) if expired_date is None else expired_date
+
     session = Session(bind=engine)
     session.query(Customers).filter(
         Customers.telegram_id == customer_telegram_id,
     ).update(values={"expired_at": dt})
+
     session.commit()
+    session.close()
 
 
 def get_deal_by_customer_telegram_id(customer_telegram_id: int):
@@ -76,3 +79,14 @@ def set_chat_id(customer_telegram_id: int, chat_id: int):
         Customers.telegram_id == customer_telegram_id,
     ).update(values={"chat_id": chat_id})
     session.commit()
+
+
+def get_customer_by_telegram_id(customer_telegram_id: int):
+    session = Session(bind=engine)
+    data = session.query(Customers).filter(
+        Customers.telegram_id == customer_telegram_id,
+    ).first()
+
+    session.close()
+
+    return data
