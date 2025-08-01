@@ -1,3 +1,5 @@
+from pyexpat.errors import messages
+
 from aiogram.filters import CommandStart
 from aiogram.types import (
     Message,
@@ -7,11 +9,23 @@ from aiogram.types import (
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from loader import dp
-from src.database import get_active_user
+from src.depends import (
+    customer_repository,
+    audit_repository
+)
 
 
 @dp.message(CommandStart())
 async def start_message(message: Message):
+    audit_repository.add_row(
+        user_telegram_id=message.from_user.id,
+        chat_id=message.chat.id,
+        fullname=message.from_user.full_name,
+        username=message.from_user.username,
+        event_name="start",
+        description="User pressed start",
+    )
+
     await message.answer(text=f"Привет, {message.from_user.full_name}!")
 
     await message.answer(text="Проверяем подписку...")
@@ -27,11 +41,11 @@ async def start_message(message: Message):
         ]
     )))
 
-    if get_active_user(
+    if customer_repository.get_active_user(
             customer_telegram_id=message.from_user.id
     ) is None:
         await message.answer(
-            text="У вас нет активной подписки. Для приобритения подписки выберите нужную подписку",
+            text="У вас нет активной подписки. Для приобретения подписки выберите нужную подписку",
             reply_markup=builder.as_markup()
         )
     else:

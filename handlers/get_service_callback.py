@@ -5,9 +5,9 @@ from aiogram.types import CallbackQuery
 from aiogram.methods.create_invoice_link import LabeledPrice
 
 from config import PROVIDER_TOKEN
-from src.database import (
-    add_row,
-    Deals,
+from src.depends import (
+    deals_repository,
+    audit_repository
 )
 from loader import (
     dp,
@@ -18,6 +18,15 @@ from loader import (
 @dp.callback_query(lambda c: c.data.startswith("subcription_"))
 async def callback_1m(callback: CallbackQuery, state: FSMContext):
     month_count = callback.data.replace('subcription_', '')
+
+    audit_repository.add_row(
+        user_telegram_id=callback.message.from_user.id,
+        chat_id=callback.message.chat.id,
+        fullname=callback.message.chat.full_name,
+        username=callback.message.chat.username,
+        event_name="choose",
+        description=f"User chose {month_count} month",
+    )
 
     await callback.message.answer(text=f"Вы выбрали {month_count} месяц(а)")
 
@@ -42,8 +51,7 @@ async def callback_1m(callback: CallbackQuery, state: FSMContext):
             provider_token=PROVIDER_TOKEN,
         )
 
-        add_row(
-            table=Deals,
+        deals_repository.add_row(
             customer_telegram_id=callback.from_user.id,
             service_months=month_count
         )

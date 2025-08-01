@@ -33,3 +33,16 @@ class Deals(Base):
     service_months = Column(Integer)
     is_success = Column(Boolean, default=False)
     created_at = Column(TIMESTAMP, default=datetime.now())
+
+
+class Audit(Base):
+    __tablename__ = "audit"
+
+    id = Column(Integer, primary_key=True)
+    user_telegram_id = Column(BigInteger)
+    chat_id = Column(BigInteger)
+    fullname = Column(String)
+    username = Column(String)
+    event_name = Column(String)
+    description = Column(String)
+    created_at = Column(TIMESTAMP, default=datetime.now())
