@@ -7,8 +7,6 @@ from loader import (
 )
 
 
-
-
 @dp.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
     try:

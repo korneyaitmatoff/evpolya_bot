@@ -7,14 +7,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from config import GROUP_ID
-from src.database import (
-    add_row,
-    Customers,
-    set_success_deals,
-    set_expired_date,
-    get_deal_by_customer_telegram_id,
-    get_customer_by_telegram_id,
-    get_active_user
+from src.depends import (
+    customer_repository,
+    audit_repository,
+    deals_repository
 )
 from loader import bot, dp
 
@@ -23,6 +19,15 @@ logging.basicConfig(level=logging.INFO)
 
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: Message, state: FSMContext):
+    audit_repository.add_row(
+        user_telegram_id=message.from_user.id,
+        chat_id=message.chat.id,
+        fullname=message.chat.full_name,
+        username=message.chat.username,
+        event_name="paid",
+        description=f"User paid {message.successful_payment.total_amount // 100}",
+    )
+
     await message.reply(
         f"Платеж на сумму {message.successful_payment.total_amount // 100} "
         f"{message.successful_payment.currency} прошел успешно!"
@@ -33,8 +38,10 @@ async def process_successful_payment(message: Message, state: FSMContext):
     if current_state is not None:
         await state.clear()
 
-    months = get_deal_by_customer_telegram_id(customer_telegram_id=message.from_user.id).service_months
-    customer = get_customer_by_telegram_id(
+    months = deals_repository.get_deal_by_customer_telegram_id(
+        customer_telegram_id=message.from_user.id
+    ).service_months
+    customer = customer_repository.get_customer_by_telegram_id(
         customer_telegram_id=message.from_user.id
     )
 
@@ -43,16 +50,14 @@ async def process_successful_payment(message: Message, state: FSMContext):
         user_id=message.from_user.id
     )
 
-
     if customer is None:
-        add_row(
-            table=Customers,
+        customer_repository.add_row(
             name=message.from_user.full_name,
             telegram_id=message.from_user.id,
             chat_id=GROUP_ID
         )
 
-        set_expired_date(
+        customer_repository.set_expired_date(
             customer_telegram_id=message.from_user.id,
             expired_date=datetime.now() + relativedelta(months=months)
         )
@@ -81,11 +86,11 @@ async def process_successful_payment(message: Message, state: FSMContext):
         else:
             await message.reply(f"Ваша подписка продлена на {months} месяц(ев)")
 
-        set_expired_date(
+        customer_repository.set_expired_date(
             customer_telegram_id=message.from_user.id,
             expired_date=new_expired_date
         )
 
-        set_success_deals(
+        deals_repository.set_success_deals(
             customer_id=message.from_user.id
         )
